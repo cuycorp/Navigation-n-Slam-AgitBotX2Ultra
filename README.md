@@ -1,20 +1,134 @@
-# Navigation and SLAM on a simulated robot (AgiBot X2 Ultra homework)
+# Simulation of SLAM and navigation
 
-Build a map with SLAM and navigate in it, in a ROS 2 simulation that runs in Docker.
+For this task, a TurtleBot3 Burger was selected to map and navigate the TurtleBot3 House, an office-like world built for this robot, in a ROS 2 simulation that runs in Docker.
+
+**Index**
+
+- [Technology stack](#technology-stack)
+- [Requirements](#requirements)
+- [Install instructions](#install-instructions)
+- [Available commands](#available-commands)
+- [Tasks](#tasks)
+  - [2.1 Setup](#21-setup)
+  - [2.2 Mapping](#22-mapping)
+  - [2.3 Navigation](#23-navigation)
+  - [2.4 Precise arrival](#24-precise-arrival)
+  - [2.5 Unexpected obstacle](#25-unexpected-obstacle)
+- [Reproduce the 5 arrival runs](#reproduce-the-5-arrival-runs)
+- [Exact versions](#exact-versions)
+- [Repository layout](#repository-layout)
+
+## Technology stack
+
+| | Choice | Reason |
+|---|---|---|
+| Environment | **Docker** (Ubuntu 24.04 container) | ROS 2 isn't compatible with the development laptop's Ubuntu 25.10: Jazzy is only released for Ubuntu 24.04, so it runs in a container. Docker also makes the setup reproducible with one command on any Linux host |
+| Robot | **TurtleBot3 Burger** | Standard ROS robot: 360° LiDAR (0.12–3.5 m, 5 Hz), wheel odometry and IMU. No camera to render, so it's lighter than the Waffle or the TurtleBot4 |
+| World | **TurtleBot3 House** | Ships with the robot. Rooms, doors and furniture make it the most office-like stock world; the Nav2 depot and warehouse are open halls. The entrance plays "reception", and one room plays "meeting room" |
+| ROS 2 | **Jazzy** | Long-term support until May 2029, and every package needed exists as a binary. Humble only pairs with older simulators, and Lyrical still lacks Nav2's main packages |
+| Simulator | **Gazebo Harmonic** | The official pairing for Jazzy, with ready TurtleBot3 and Nav2 simulations |
+| SLAM | **slam_toolbox** (online async) | Nav2's default: graph SLAM with loop closure, low CPU use, saves both the map and the pose graph |
+| Navigation | **Nav2** (AMCL + Regulated Pure Pursuit) | The standard ROS 2 navigation stack. Regulated Pure Pursuit replaces the default MPPI controller, which is too heavy for a 4-core laptop |
 
 ## Requirements
 
-<!-- Q1.1: host OS, Docker + Compose versions, GPU (/dev/dri), X11/XWayland, internet for the first launch -->
+ROS 2, Gazebo, the robot and the world all live in the Docker image, so the host only needs the items below. Tested on Ubuntu 25.10; other distributions supported by Docker should work, with two known exceptions this setup doesn't handle: **NVIDIA-only GPUs** (they need the NVIDIA Container Toolkit) and **SELinux hosts** such as Fedora or RHEL (they block the container's access to the X11 socket unless you add `security_opt: [label:disable]` to `compose.yaml`).
 
-## Install
+| Requirement | Notes |
+|---|---|
+| Linux x86_64, Docker Engine with Compose, GNU Make | Tested: Docker 29.4.0, Compose v5.1.2. Your user must be in the `docker` group |
+| Display (X11 or XWayland) and `xhost` | For the Gazebo and RViz windows; `make up` runs `xhost +local:docker` |
+| Intel or AMD GPU with OpenGL ≥ 3.3 at `/dev/dri` | Used through Mesa by Gazebo's renderer and simulated LiDAR. Integrated graphics are enough |
+| ~2 GB free RAM, ~3 GB disk | Measured: 0.8 GiB RAM without the Gazebo window, 1.8 GiB with it; image 2.47 GB |
+| Internet | For `make build` and the first `make sim` (Gazebo Fuel models) |
 
-<!-- Q1.1: clone, make build, make up -->
+**Tested on:** Intel Core i7-8565U (4 cores), 14 GiB RAM, Intel UHD Graphics 620 (OpenGL 4.6), Ubuntu 25.10.
 
-## Run each task
+## Install instructions
+
+1. Download the repository:
+
+   ```bash
+   git clone https://github.com/cuycorp/Navigation-n-Slam-AgitBotX2Ultra.git
+   ```
+
+2. Move into its folder. All the following commands run from here:
+
+   ```bash
+   cd Navigation-n-Slam-AgitBotX2Ultra
+   ```
+
+3. Build the Docker image `x2nav:jazzy` (ROS 2 Jazzy, Gazebo Harmonic and the TurtleBot3 packages). It prints the image size at the end. This is needed once, and again only if `docker/Dockerfile` changes:
+
+   ```bash
+   make build
+   ```
+
+4. Start the container in the background and allow its windows on your screen. Run this again after a reboot or a `make down`:
+
+   ```bash
+   make up
+   ```
+
+## Available commands
+
+Run them from the repository folder. `make help` prints the same list.
+
+| Command | Functionality | When to use it |
+|---|---|---|
+| `make help` | Lists the available targets | Whenever you forget a command |
+| `make build` | Builds the Docker image and prints its size | Once after cloning, and after any change to `docker/Dockerfile` |
+| `make up` | Starts the container and allows its windows on your screen | Before any other target, after a reboot or a `make down` |
+| `make sim` | Starts the robot in the House world, with the Gazebo window | To see the simulated world (task 2.1) |
+| `make sim GUI=0` | Same, without the Gazebo window, about twice as fast | For long runs, when you don't need to see the world |
+| `make shell` | Opens a terminal inside the container, with ROS 2 ready | To run `ros2` commands (topics, nodes) |
+| `make log` | Shows the container's status, its CPU and RAM use, and the simulation processes running | To check what is running, or to measure resource use |
+| `make stop` | Stops any simulation still running in the container | After closing a terminal without `Ctrl+C`. `make sim` runs it first |
+| `make versions` | Prints the exact versions of the host, container, ROS 2 and Gazebo | To fill in or check the [Exact versions](#exact-versions) table |
+| `make down` | Stops and removes the container (the image stays) | When you're done for the day, to free its memory |
+| `make clean` | Removes the container and the image | To free 2.5 GB of disk, or to test a fresh install. The next start needs `make build` |
+
+## Tasks
 
 ### 2.1 Setup
 
-<!-- Q1.1: make sim -->
+A TurtleBot3 Burger in the TurtleBot3 House world. Gazebo's physics step is set to 4 ms (`worlds/house.world`), which lets the simulation run at real-time speed on a laptop.
+
+1. Start the simulation with the Gazebo window:
+
+   ```bash
+   make sim
+   ```
+
+   Or start it without the window, about twice as fast (real-time factor about 0.98 instead of 0.4–0.6):
+
+   ```bash
+   make sim GUI=0
+   ```
+
+2. In a second terminal, open a shell inside the container:
+
+   ```bash
+   make shell
+   ```
+
+3. Check that the robot's topics exist. You should see `/scan`, `/odom`, `/imu`, `/cmd_vel`, `/tf` and `/clock`, among others:
+
+   ```bash
+   ros2 topic list
+   ```
+
+4. Check that the LiDAR data reaches ROS. Expect about 5 Hz × the real-time factor, with regular gaps between messages. Press `Ctrl+C` to stop the measurement:
+
+   ```bash
+   ros2 topic hz /scan
+   ```
+
+5. Stop the simulation with `Ctrl+C` in its terminal. If you closed that terminal instead, run:
+
+   ```bash
+   make stop
+   ```
 
 ### 2.2 Mapping
 
