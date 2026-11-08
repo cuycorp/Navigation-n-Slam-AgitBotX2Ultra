@@ -1,0 +1,28 @@
+name: x2nav
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+    image: x2nav:jazzy
+    init: true                          # tini as PID 1: cleans up stopped simulation processes (P-005)
+    network_mode: host                  # ROS 2 discovery works as on the host
+    ipc: host                           # DDS shared-memory transport
+    environment:
+      - DISPLAY=${DISPLAY:-:0}          # windows (Gazebo, later RViz) on your screen
+      - QT_X11_NO_MITSHM=1
+      - ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST   # keep ROS traffic off the office Wi-Fi
+    group_add:                          # non-root access to the GPU device files
+      - ${VIDEO_GID:-44}
+      - ${RENDER_GID:-1000}             # no "render" group on the host: your own group (harmless)
+    devices:
+      - /dev/dri:/dev/dri               # GPU (Intel UHD 620), verified in P-001
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./:/ws:rw                       # the repo is the ROS 2 workspace
+    working_dir: /ws
+    command: sleep infinity             # long-running; every step runs in it via make
