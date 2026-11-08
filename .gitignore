@@ -1,0 +1,19 @@
+# Claude Code environment (local only, never committed)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json
+
+# Personal editor setup (progress-note form)
+.vscode/
+
+# Working documents (local only for now). The report must be committed before hand-in.
+docs/
+
+# colcon build output (T2 onward)
+build/
+install/
+log/
+# Python caches
+__pycache__/
+*.pyc
