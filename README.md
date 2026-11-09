@@ -81,6 +81,11 @@ Run them from the repository folder. `make help` prints the same list.
 | `make up` | Starts the container and allows its windows on your screen | Before any other target, after a reboot or a `make down` |
 | `make sim` | Starts the robot in the House world, with the Gazebo window | To see the simulated world (task 2.1) |
 | `make sim GUI=0` | Same, without the Gazebo window, about twice as fast | For long runs, when you don't need to see the world |
+| `make sim X=2.0 Y=-2.0` | Same, with the robot spawned at another point of the world (default: X=-2.0 Y=-0.5) | For the square test, which needs open floor |
+| `make teleop` | Drives the robot with the keyboard (`i` forward, `j`/`l` turn, `k` stop) | To move the robot by hand, for example while mapping |
+| `make rviz` | Opens RViz with the robot model, its frames, the LiDAR scan and odometry | To see what the robot senses |
+| `make ws` | Builds our ROS 2 package `src/x2_nav` with colcon | After cloning, and after adding a node or changing `setup.py` |
+| `make square` | Runs `square_driver`: drives a 1 m square without feedback and logs the start and end odometry | To test the first node and see odometry drift. Start the simulation with `make sim X=2.0 Y=-2.0` first |
 | `make shell` | Opens a terminal inside the container, with ROS 2 ready | To run `ros2` commands (topics, nodes) |
 | `make log` | Shows the container's status, its CPU and RAM use, and the simulation processes running | To check what is running, or to measure resource use |
 | `make stop` | Stops any simulation still running in the container | After closing a terminal without `Ctrl+C`. `make sim` runs it first |
@@ -129,6 +134,42 @@ A TurtleBot3 Burger in the TurtleBot3 House world. Gazebo's physics step is set 
    ```bash
    make stop
    ```
+
+#### Drive the robot and see its sensors
+
+Start the simulation first (`make sim` or `make sim GUI=0`), then use one terminal per step.
+
+1. Open RViz to see the robot model, its frames (`odom`, `base_footprint`, `base_scan`…), the LiDAR scan as red points, and the odometry arrows:
+
+   ```bash
+   make rviz
+   ```
+
+2. Drive the robot with the keyboard: `i` forward, `,` backward, `j` and `l` turn, `k` stop. The scan points should stay aligned with the walls while the robot moves. The simulated robot keeps its last command until it gets a new one, so always stop with `k` before quitting:
+
+   ```bash
+   make teleop
+   ```
+
+3. Build our ROS 2 package (`src/x2_nav`). Needed once after cloning, and after adding a node:
+
+   ```bash
+   make ws
+   ```
+
+4. Run the first node, `square_driver`. It drives a 1 m square without feedback, turning left, then prints the odometry pose at the start and at the end. The default spawn point is too tight for it (an obstacle 0.23 m to the left), so first restart the simulation at an open spot (1.7 m clear all around):
+
+   ```bash
+   make sim X=2.0 Y=-2.0
+   ```
+
+   Then, in another terminal:
+
+   ```bash
+   make square
+   ```
+
+   Compare the start and end poses in the log with the robot's true pose in Gazebo (Entity Tree → burger → Pose). Measured on 2026-11-09: true gap 0.9 cm and 1.0°; odometry gap 0.7 cm and 0.1°.
 
 ### 2.2 Mapping
 

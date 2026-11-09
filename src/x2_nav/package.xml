@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>x2_nav</name>
+  <version>0.1.0</version>
+  <description>Nodes for the SLAM and navigation homework: square driver (Q1.2), goal sender (Q3.2), ground truth (Q4.1), arrival runs (Q4.2).</description>
+  <maintainer email="cuycorp@gmail.com">Francesca Camarena</maintainer>
+  <license>MIT</license>
+
+  <!-- Q1.2: Python client library and the TwistStamped / Odometry messages used by square_driver -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
