@@ -17,7 +17,7 @@ Y ?= -0.5
 
 # Simulation processes that can outlive a closed terminal. The [x] brackets stop pkill from
 # matching its own command line.
-SIM_PROCS := [r]os2 launch|[g]z sim|[p]arameter_bridge|[r]obot_state_publisher|[r]viz2|[s]quare_driver|[a]sync_slam_toolbox_node|[a]uto_map
+SIM_PROCS := [r]os2 launch|[g]z sim|[p]arameter_bridge|[r]obot_state_publisher|[r]viz2|[s]quare_driver|[a]sync_slam_toolbox_node|[a]uto_map|[m]ap_server|[a]mcl|[p]lanner_server|[c]ontroller_server|[b]ehavior_server|[b]t_navigator|[v]elocity_smoother|[l]ifecycle_manager
 
 # Name of the map files in maps/: make save-map MAP=house
 MAP ?= house
@@ -26,7 +26,7 @@ MAP ?= house
 ROS = $(DC) exec dev bash -c 'source /opt/ros/jazzy/setup.bash; \
       [ -f install/setup.bash ] && source install/setup.bash; $(1)'
 
-.PHONY: help build up down clean log stop shell versions sim teleop rviz ws square mapping auto-map save-map
+.PHONY: help build up down clean log stop shell versions sim teleop rviz ws square mapping auto-map save-map nav
 help:      ## list the targets
 	@grep -E '^[a-z-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
 build:     ## build the Docker image and print its size
@@ -75,3 +75,5 @@ auto-map:  ## Q2.1: drive the mapping route automatically, smooth turns (right a
 save-map:  ## Q2.1: save the current map to maps/$(MAP).pgm/.yaml and the pose graph (make mapping must be running)
 	$(call ROS,ros2 run nav2_map_server map_saver_cli -f /ws/maps/$(MAP) --ros-args -p use_sim_time:=true -p save_map_timeout:=10.0 \
 	  && ros2 service call /slam_toolbox/serialize_map slam_toolbox/srv/SerializePoseGraph "{filename: /ws/maps/$(MAP)}")
+nav: stop  ## Q3.1: simulation + Nav2 on maps/$(MAP).yaml + RViz; send a goal with "2D Goal Pose". GUI=0: no Gazebo window
+	$(call ROS,ros2 launch /ws/launch/navigation.launch.py gui:=$(GUI) map:=/ws/maps/$(MAP).yaml)

@@ -21,6 +21,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-nav2-map-server \
     && rm -rf /var/lib/apt/lists/*
 
+# Q3.1: navigate on the saved map. Only the Nav2 servers launch/navigation.launch.py starts (48 MB);
+# the navigation2 + nav2_bringup metapackages would add 629 MB (OpenCV, VTK, docking, TurtleBot4 sim).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ros-jazzy-nav2-amcl \
+      ros-jazzy-nav2-planner \
+      ros-jazzy-nav2-navfn-planner \
+      ros-jazzy-nav2-controller \
+      ros-jazzy-nav2-regulated-pure-pursuit-controller \
+      ros-jazzy-nav2-bt-navigator \
+      ros-jazzy-nav2-behaviors \
+      ros-jazzy-nav2-velocity-smoother \
+      ros-jazzy-nav2-lifecycle-manager \
+    && rm -rf /var/lib/apt/lists/*
+
 # Run as the host user, so files written into the repo (maps, results, build) aren't owned by root.
 # The base image already has the user "ubuntu" (UID/GID 1000); make passes your real IDs.
 ARG USER_UID=1000

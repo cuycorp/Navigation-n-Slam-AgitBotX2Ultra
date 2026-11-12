@@ -89,6 +89,7 @@ Run them from the repository folder. `make help` prints the same list.
 | `make mapping GUI=0` | Starts the simulation, slam_toolbox and RViz, without the Gazebo window | To build the map (task 2.2), driving with `make auto-map` or `make teleop` |
 | `make auto-map` | Drives the mapping route automatically, with smooth turns and a LiDAR safety stop (about 9–10 min) | Right after a fresh `make mapping`, with the robot at its spawn |
 | `make save-map` | Saves the current map and pose graph to `maps/house.*` (`MAP=name` for another name) | When the map is complete, while `make mapping` is still running |
+| `make nav GUI=0` | Starts the simulation, Nav2 on the saved map and RViz, without the Gazebo window | To send the robot to a goal (task 2.3) with RViz's "2D Goal Pose" |
 | `make shell` | Opens a terminal inside the container, with ROS 2 ready | To run `ros2` commands (topics, nodes) |
 | `make log` | Shows the container's status, its CPU and RAM use, and the simulation processes running | To check what is running, or to measure resource use |
 | `make stop` | Stops any simulation still running in the container | After closing a terminal without `Ctrl+C`. `make sim` runs it first |
@@ -204,7 +205,24 @@ To drive by hand instead, replace step 2 with `make teleop` (`i` forward, `j`/`l
 
 ### 2.3 Navigation
 
-<!-- Q3.1–Q3.2: make nav, make go GOAL=meeting_room -->
+Send the robot from "reception" (its spawn, the map origin) to the "meeting room", the south-east room with the two café tables, using Nav2 on the saved map. The named poses are in `config/goals.yaml`; the Nav2 settings are in `config/nav2.yaml`.
+
+1. Start the simulation, Nav2 and RViz. The robot starts at reception and AMCL already knows it, so there is no initial pose to set:
+
+   ```bash
+   make nav GUI=0
+   ```
+
+2. Wait until the terminal prints `Managed nodes are active` and RViz shows the map, the costmaps and the robot.
+
+3. In RViz, click **2D Goal Pose**, then click in the south-east room (meeting room: map x 7.7, y −1.8) and drag towards the tables, to the east, to set the heading.
+
+4. Watch the robot: a blue line shows the planned path, and the robot follows it through the entrance door and the south-east room's door. It takes about 2 minutes. The terminal prints `Goal succeeded` when it arrives.
+
+5. Stop everything with `Ctrl+C`.
+
+If the robot spins in place or backs up, Nav2 is running its recovery behaviours; it usually continues on its own.
+
 
 ### 2.4 Precise arrival
 
