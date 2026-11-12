@@ -293,7 +293,13 @@ Each run drives the robot to reception, then to the meeting room, waits 2 s, and
 
 3. The results are saved in `results/arrival_baseline.csv`, one row per run. Columns: the true, AMCL and goal poses; the arrival error (true − goal) as dx, dy, distance and yaw; the localization error (AMCL − true); the stopping error (AMCL − goal); and the time of the trip.
 
-To save under another name, or run another number of times, use `make runs OUT=name RUNS=3`.
+To save under another name, or run another number of times, use `make runs OUT=name RUNS=3`. A plain `make runs` overwrites `results/arrival_baseline.csv`, so give tests their own name.
+
+The settings in `config/nav2.yaml` are the tuned ones (Q4.3). `results/arrival_baseline.csv` was measured before tuning, `results/arrival_tuned.csv` after it, and `results/tuning_E1.csv` to `tuning_E4.csv` hold the 3-run tests of each tuning step. To measure the tuned settings again:
+
+```bash
+make runs OUT=arrival_tuned
+```
 
 
 ## Exact versions

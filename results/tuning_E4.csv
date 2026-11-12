@@ -1,0 +1,4 @@
+run,result,return_result,time_s,goal_x,goal_y,goal_yaw_deg,truth_x,truth_y,truth_yaw_deg,amcl_x,amcl_y,amcl_yaw_deg,arrival_dx_cm,arrival_dy_cm,arrival_dist_cm,arrival_yaw_deg,amcl_err_cm,amcl_err_deg,stop_err_cm,stop_err_deg
+1,FAILED,SUCCEEDED,43.3,7.7,-1.8,0.0,2.635,-0.2447,25.06,2.6518,-0.172,26.82,-506.5,155.5,529.8,25.1,7.5,1.8,530.4,26.8
+2,SUCCEEDED,SUCCEEDED,78.5,7.7,-1.8,0.0,7.7176,-1.9167,1.96,7.6965,-1.7907,1.9,1.8,-11.7,11.8,2.0,12.8,-0.1,1.0,1.9
+3,SUCCEEDED,SUCCEEDED,83.2,7.7,-1.8,0.0,7.7245,-1.8864,0.2,7.6994,-1.7818,-2.13,2.5,-8.6,9.0,0.2,10.8,-2.3,1.8,-2.1
