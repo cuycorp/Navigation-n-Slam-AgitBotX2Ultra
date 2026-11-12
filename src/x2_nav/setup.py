@@ -23,6 +23,8 @@ setup(
             'square_driver = x2_nav.square_driver:main',  # Q1.2
             'auto_map = x2_nav.auto_map:main',            # Q2.1
             'go_to = x2_nav.go_to:main',                  # Q3.2
+            'ground_truth = x2_nav.ground_truth:main',    # Q4.1
+            'arrival_runs = x2_nav.arrival_runs:main',    # Q4.2
         ],
     },
 )

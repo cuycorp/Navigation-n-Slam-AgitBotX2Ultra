@@ -91,6 +91,7 @@ Run them from the repository folder. `make help` prints the same list.
 | `make save-map` | Saves the current map and pose graph to `maps/house.*` (`MAP=name` for another name) | When the map is complete, while `make mapping` is still running |
 | `make nav GUI=0` | Starts the simulation, Nav2 on the saved map and RViz, without the Gazebo window | To send the robot to a goal (task 2.3) with RViz's "2D Goal Pose" |
 | `make go` | Sends the robot to the meeting room with Nav2 and prints the result (`GOAL=reception` to go back) | While `make nav` is running, instead of clicking a goal in RViz |
+| `make runs` | Drives 5 trips reception → meeting room and saves the arrival errors to `results/arrival_baseline.csv` | While `make nav` is running, to measure precise arrival (task 2.4) |
 | `make shell` | Opens a terminal inside the container, with ROS 2 ready | To run `ros2` commands (topics, nodes) |
 | `make log` | Shows the container's status, its CPU and RAM use, and the simulation processes running | To check what is running, or to measure resource use |
 | `make stop` | Stops any simulation still running in the container | After closing a terminal without `Ctrl+C`. `make sim` runs it first |
@@ -249,7 +250,26 @@ The goals are the named poses in `config/goals.yaml`.
 
 ### 2.4 Precise arrival
 
-<!-- Q4.1–Q4.3: make runs -->
+Measure how close the robot stops to the meeting-room goal. The error is measured against the robot's true pose from Gazebo, which `make nav` publishes on `/ground_truth` in the map frame. Nav2 never uses it; it is only for measuring.
+
+1. Start Nav2 and wait for `Managed nodes are active`:
+
+   ```bash
+   make nav GUI=0
+   ```
+
+2. In a second terminal, check the ground truth. With the robot still at reception, it reads about x = 0.0, y = 0.0:
+
+   ```bash
+   make shell
+   ```
+
+   ```bash
+   ros2 topic echo --once /ground_truth
+   ```
+
+3. Run the arrival runs, described in [Reproduce the 5 arrival runs](#reproduce-the-5-arrival-runs).
+
 
 ### 2.5 Unexpected obstacle
 
@@ -257,7 +277,24 @@ The goals are the named poses in `config/goals.yaml`.
 
 ## Reproduce the 5 arrival runs
 
-<!-- Q4.1–Q4.3: make runs -->
+Each run drives the robot to reception, then to the meeting room, waits 2 s, and logs the true pose, AMCL's estimate and the goal. Five runs take about 12 minutes.
+
+1. Start Nav2 and wait for `Managed nodes are active`. Don't run RViz goals or `make go` at the same time:
+
+   ```bash
+   make nav GUI=0
+   ```
+
+2. In a second terminal, start the runs. The terminal prints one line per run, then a table with the mean and the largest error:
+
+   ```bash
+   make runs
+   ```
+
+3. The results are saved in `results/arrival_baseline.csv`, one row per run. Columns: the true, AMCL and goal poses; the arrival error (true − goal) as dx, dy, distance and yaw; the localization error (AMCL − true); the stopping error (AMCL − goal); and the time of the trip.
+
+To save under another name, or run another number of times, use `make runs OUT=name RUNS=3`.
+
 
 ## Exact versions
 

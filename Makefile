@@ -17,18 +17,21 @@ Y ?= -0.5
 
 # Simulation processes that can outlive a closed terminal. The [x] brackets stop pkill from
 # matching its own command line.
-SIM_PROCS := [r]os2 launch|[g]z sim|[p]arameter_bridge|[r]obot_state_publisher|[r]viz2|[s]quare_driver|[a]sync_slam_toolbox_node|[a]uto_map|[m]ap_server|[a]mcl|[p]lanner_server|[c]ontroller_server|[b]ehavior_server|[b]t_navigator|[v]elocity_smoother|[l]ifecycle_manager|[g]o_to
+SIM_PROCS := [r]os2 launch|[g]z sim|[p]arameter_bridge|[r]obot_state_publisher|[r]viz2|[s]quare_driver|[a]sync_slam_toolbox_node|[a]uto_map|[m]ap_server|[a]mcl|[p]lanner_server|[c]ontroller_server|[b]ehavior_server|[b]t_navigator|[v]elocity_smoother|[l]ifecycle_manager|[g]o_to|[g]round_truth|[a]rrival_runs
 
 # Name of the map files in maps/: make save-map MAP=house
 MAP ?= house
 # Named goal from config/goals.yaml: make go GOAL=reception
 GOAL ?= meeting_room
+# Arrival runs (Q4.2): make runs RUNS=5 OUT=arrival_baseline -> results/$(OUT).csv
+RUNS ?= 5
+OUT ?= arrival_baseline
 
 # Run a command inside the container, with ROS 2 and our workspace (once built) sourced.
 ROS = $(DC) exec dev bash -c 'source /opt/ros/jazzy/setup.bash; \
       [ -f install/setup.bash ] && source install/setup.bash; $(1)'
 
-.PHONY: help build up down clean log stop shell versions sim teleop rviz ws square mapping auto-map save-map nav go
+.PHONY: help build up down clean log stop shell versions sim teleop rviz ws square mapping auto-map save-map nav go runs
 help:      ## list the targets
 	@grep -E '^[a-z-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
 build:     ## build the Docker image and print its size
@@ -81,3 +84,5 @@ nav: stop  ## Q3.1: simulation + Nav2 on maps/$(MAP).yaml + RViz; send a goal wi
 	$(call ROS,ros2 launch /ws/launch/navigation.launch.py gui:=$(GUI) map:=/ws/maps/$(MAP).yaml)
 go:        ## Q3.2: send the robot to GOAL (default meeting_room) from config/goals.yaml (make nav must be running)
 	$(call ROS,ros2 run x2_nav go_to $(GOAL) --ros-args -p use_sim_time:=true)
+runs:      ## Q4.2: RUNS trips reception -> meeting room, arrival errors vs ground truth -> results/$(OUT).csv (make nav must be running)
+	$(call ROS,ros2 run x2_nav arrival_runs $(OUT) $(RUNS) --ros-args -p use_sim_time:=true)

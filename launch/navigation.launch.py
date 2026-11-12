@@ -1,4 +1,5 @@
 """Q3.1: the simulation + Nav2 on the saved map + RViz, to send the robot to a goal.
+Q4.1: plus the ground-truth pose from Gazebo on /ground_truth, for measuring the arrival error.
 
 Usage (inside the container):
     ros2 launch /ws/launch/navigation.launch.py [gui:=false] [rviz:=false] [map:=/ws/maps/house.yaml]
@@ -64,7 +65,13 @@ def generate_launch_description():
         Node(package='nav2_lifecycle_manager', executable='lifecycle_manager',
              name='lifecycle_manager_navigation', output='screen',
              parameters=[sim_time, {'autostart': True, 'node_names': NAV2_NODES}]),
-        # 6. RViz: map, costmaps, planned path, robot; goals with "2D Goal Pose".
+        # 6. Ground truth, for measuring only (Q4.1): Gazebo's true poses bridged to /gz_poses,
+        #    then the robot's pose converted to the map frame on /ground_truth.
+        Node(package='ros_gz_bridge', executable='parameter_bridge', name='ground_truth_bridge',
+             arguments=['/world/default/dynamic_pose/info@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'],
+             remappings=[('/world/default/dynamic_pose/info', '/gz_poses')], parameters=[sim_time]),
+        Node(package='x2_nav', executable='ground_truth', name='ground_truth', parameters=[sim_time]),
+        # 7. RViz: map, costmaps, planned path, robot; goals with "2D Goal Pose".
         Node(package='rviz2', executable='rviz2', arguments=['-d', RVIZ_CONFIG],
              parameters=[sim_time], condition=IfCondition(rviz)),
     ])
