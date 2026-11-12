@@ -26,12 +26,18 @@ GOAL ?= meeting_room
 # Arrival runs (Q4.2): make runs RUNS=5 OUT=arrival_baseline -> results/$(OUT).csv
 RUNS ?= 5
 OUT ?= arrival_baseline
+# Obstacle (Q5.1), in map coordinates like config/goals.yaml. Default: on the path to the meeting room.
+OX ?= 5.5
+OY ?= 1.3
+# Map -> world: the map origin is the spawn point (X, Y).
+OBS_X = $(shell awk 'BEGIN{print $(OX) + ($(X))}')
+OBS_Y = $(shell awk 'BEGIN{print $(OY) + ($(Y))}')
 
 # Run a command inside the container, with ROS 2 and our workspace (once built) sourced.
 ROS = $(DC) exec dev bash -c 'source /opt/ros/jazzy/setup.bash; \
       [ -f install/setup.bash ] && source install/setup.bash; $(1)'
 
-.PHONY: help build up down clean log stop shell versions sim teleop rviz ws square mapping auto-map save-map nav go runs
+.PHONY: help build up down clean log stop shell versions sim teleop rviz ws square mapping auto-map save-map nav go runs obstacle block-door clear-obstacle
 help:      ## list the targets
 	@grep -E '^[a-z-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
 build:     ## build the Docker image and print its size
@@ -86,3 +92,9 @@ go:        ## Q3.2: send the robot to GOAL (default meeting_room) from config/go
 	$(call ROS,ros2 run x2_nav go_to $(GOAL) --ros-args -p use_sim_time:=true)
 runs:      ## Q4.2: RUNS trips reception -> meeting room, arrival errors vs ground truth -> results/$(OUT).csv (make nav must be running)
 	$(call ROS,ros2 run x2_nav arrival_runs $(OUT) $(RUNS) --ros-args -p use_sim_time:=true)
+obstacle:  ## Q5.1: drop a 0.3 m box at map OX, OY (default 5.5, 1.3: on the path to the meeting room); make nav must be running
+	$(call ROS,ros2 run ros_gz_sim create -world default -file /ws/config/obstacle_box.sdf -name obstacle -x $(OBS_X) -y $(OBS_Y) -z 0.25)
+block-door: ## Q5.1: block the meeting room's only door with a 1.4 m panel; make nav must be running
+	$(call ROS,ros2 run ros_gz_sim create -world default -file /ws/config/obstacle_door.sdf -name door_block -x 6.22 -y 0.25 -z 0.25)
+clear-obstacle: ## Q5.1: remove the box and the door panel from the simulation
+	$(call ROS,for e in obstacle door_block; do gz service -s /world/default/remove --reqtype gz.msgs.Entity --reptype gz.msgs.Boolean --timeout 3000 --req "name: \"$$e\" type: MODEL"; done)

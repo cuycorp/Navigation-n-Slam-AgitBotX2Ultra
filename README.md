@@ -92,6 +92,9 @@ Run them from the repository folder. `make help` prints the same list.
 | `make nav GUI=0` | Starts the simulation, Nav2 on the saved map and RViz, without the Gazebo window | To send the robot to a goal (task 2.3) with RViz's "2D Goal Pose" |
 | `make go` | Sends the robot to the meeting room with Nav2 and prints the result (`GOAL=reception` to go back) | While `make nav` is running, instead of clicking a goal in RViz |
 | `make runs` | Drives 5 trips reception → meeting room and saves the arrival errors to `results/arrival_baseline.csv` | While `make nav` is running, to measure precise arrival (task 2.4) |
+| `make obstacle` | Drops a 0.3 m box on the path to the meeting room (`OX= OY=` for another place, map coordinates) | During `make go`, to test an unexpected obstacle (task 2.5) |
+| `make block-door` | Blocks the meeting room's only door with a 1.4 m panel | To see Nav2's recoveries and a failed goal |
+| `make clear-obstacle` | Removes the box and the panel from the simulation | After an obstacle test |
 | `make shell` | Opens a terminal inside the container, with ROS 2 ready | To run `ros2` commands (topics, nodes) |
 | `make log` | Shows the container's status, its CPU and RAM use, and the simulation processes running | To check what is running, or to measure resource use |
 | `make stop` | Stops any simulation still running in the container | After closing a terminal without `Ctrl+C`. `make sim` runs it first |
@@ -273,7 +276,48 @@ Measure how close the robot stops to the meeting-room goal. The error is measure
 
 ### 2.5 Unexpected obstacle
 
-<!-- Q5.1: make obstacle -->
+Put an object on the robot's path that isn't in the saved map, and watch Nav2 drive around it. The box is 0.3 m wide (`config/obstacle_box.sdf`).
+
+1. Start Nav2 and wait for `Managed nodes are active`. Keep RViz open to watch the costmaps and the path:
+
+   ```bash
+   make nav GUI=0
+   ```
+
+2. In a second terminal, send the robot to the meeting room:
+
+   ```bash
+   make go
+   ```
+
+3. In a third terminal, once the robot is through the entrance door and driving east in the hall (about 20 s after step 2), drop the box on its path, 2 m ahead of it:
+
+   ```bash
+   make obstacle
+   ```
+
+4. Watch RViz: the box appears in the costmaps (magenta, with a cyan and red-to-blue margin), the blue path bends around it within a few seconds, and the robot follows the new path. `make go` still ends with `SUCCEEDED`.
+
+5. Remove the box:
+
+   ```bash
+   make clear-obstacle
+   ```
+
+To place the box elsewhere, give its map coordinates: `make obstacle OX=5.5 OY=1.3` (the default).
+
+Optional second case, a blocked door: with the robot back at reception (`make go GOAL=reception`), close the meeting room's only door with a 1.4 m panel, then send the robot there again:
+
+```bash
+make block-door
+```
+
+```bash
+make go
+```
+
+The robot drives to the door, finds no path, and tries Nav2's recoveries (clearing the costmaps, spinning, backing up, waiting). After about 25 s it gives up, and `make go` prints `Goal "meeting_room": FAILED`. Remove the panel with `make clear-obstacle`. The saved map in `maps/` never changes: obstacles exist only in the costmaps.
+
 
 ## Reproduce the 5 arrival runs
 

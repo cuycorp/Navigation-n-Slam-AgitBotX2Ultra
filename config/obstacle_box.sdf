@@ -1,2 +1,17 @@
 <?xml version="1.0"?>
-<!-- Q5.1: box placed on the path after mapping. Filled in Q5.1. -->
+<!-- Q5.1: a box that is not in the saved map, dropped on the robot's path with `make obstacle`.
+     0.3 x 0.3 m, 0.5 m tall (the LiDAR scans at 0.17 m). Static, so the robot can't push it away. -->
+<sdf version="1.9">
+  <model name="obstacle">
+    <static>true</static>
+    <link name="box">
+      <collision name="collision">
+        <geometry><box><size>0.3 0.3 0.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>0.3 0.3 0.5</size></box></geometry>
+        <material><ambient>0.8 0.3 0.1 1</ambient><diffuse>0.8 0.3 0.1 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+</sdf>
