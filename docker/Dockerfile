@@ -35,6 +35,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-nav2-lifecycle-manager \
     && rm -rf /var/lib/apt/lists/*
 
+# Q3.2: send goals from Python (BasicNavigator in nav2_simple_commander, used by go_to.py). One small package.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ros-jazzy-nav2-simple-commander \
+    && rm -rf /var/lib/apt/lists/*
+
 # Run as the host user, so files written into the repo (maps, results, build) aren't owned by root.
 # The base image already has the user "ubuntu" (UID/GID 1000); make passes your real IDs.
 ARG USER_UID=1000

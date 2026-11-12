@@ -90,6 +90,7 @@ Run them from the repository folder. `make help` prints the same list.
 | `make auto-map` | Drives the mapping route automatically, with smooth turns and a LiDAR safety stop (about 9–10 min) | Right after a fresh `make mapping`, with the robot at its spawn |
 | `make save-map` | Saves the current map and pose graph to `maps/house.*` (`MAP=name` for another name) | When the map is complete, while `make mapping` is still running |
 | `make nav GUI=0` | Starts the simulation, Nav2 on the saved map and RViz, without the Gazebo window | To send the robot to a goal (task 2.3) with RViz's "2D Goal Pose" |
+| `make go` | Sends the robot to the meeting room with Nav2 and prints the result (`GOAL=reception` to go back) | While `make nav` is running, instead of clicking a goal in RViz |
 | `make shell` | Opens a terminal inside the container, with ROS 2 ready | To run `ros2` commands (topics, nodes) |
 | `make log` | Shows the container's status, its CPU and RAM use, and the simulation processes running | To check what is running, or to measure resource use |
 | `make stop` | Stops any simulation still running in the container | After closing a terminal without `Ctrl+C`. `make sim` runs it first |
@@ -223,6 +224,28 @@ Send the robot from "reception" (its spawn, the map origin) to the "meeting room
 
 If the robot spins in place or backs up, Nav2 is running its recovery behaviours; it usually continues on its own.
 
+To send the goal with one command instead of RViz:
+
+1. Start Nav2 as in step 1 above, and wait for `Managed nodes are active`:
+
+   ```bash
+   make nav GUI=0
+   ```
+
+2. In a second terminal, send the robot to the meeting room. The script waits until Nav2 is ready, sends the goal, prints the distance left while driving, and ends with the result:
+
+   ```bash
+   make go
+   ```
+
+3. When it prints `Goal "meeting_room": SUCCEEDED`, send it back to reception the same way:
+
+   ```bash
+   make go GOAL=reception
+   ```
+
+The goals are the named poses in `config/goals.yaml`.
+
 
 ### 2.4 Precise arrival
 
@@ -253,3 +276,4 @@ Measured with `make versions` on 2026-11-08.
 ## Repository layout
 
 <!-- D.1 -->
+

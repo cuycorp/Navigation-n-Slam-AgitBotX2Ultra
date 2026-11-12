@@ -22,6 +22,7 @@ setup(
             # One line per node, added by the slice that implements it.
             'square_driver = x2_nav.square_driver:main',  # Q1.2
             'auto_map = x2_nav.auto_map:main',            # Q2.1
+            'go_to = x2_nav.go_to:main',                  # Q3.2
         ],
     },
 )

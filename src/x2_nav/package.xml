@@ -14,6 +14,8 @@
   <!-- Q2.1: LiDAR safety stop and route file in auto_map -->
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
+  <!-- Q3.2: BasicNavigator, to send goals to Nav2 from go_to -->
+  <exec_depend>nav2_simple_commander</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
