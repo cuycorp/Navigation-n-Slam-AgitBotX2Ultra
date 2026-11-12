@@ -39,7 +39,7 @@ ROS 2, Gazebo, the robot and the world all live in the Docker image, so the host
 | Linux x86_64, Docker Engine with Compose, GNU Make | Tested: Docker 29.4.0, Compose v5.1.2. Your user must be in the `docker` group |
 | Display (X11 or XWayland) and `xhost` | For the Gazebo and RViz windows; `make up` runs `xhost +local:docker` |
 | Intel or AMD GPU with OpenGL ≥ 3.3 at `/dev/dri` | Used through Mesa by Gazebo's renderer and simulated LiDAR. Integrated graphics are enough |
-| ~2 GB free RAM, ~3 GB disk | Measured: 0.8 GiB RAM without the Gazebo window, 1.8 GiB with it; image 2.47 GB |
+| ~2 GB free RAM, ~4 GB disk | Measured: 0.8 GiB RAM without the Gazebo window, 1.8 GiB with it; image 3.1 GB |
 | Internet | For `make build` and the first `make sim` (Gazebo Fuel models) |
 
 **Tested on:** Intel Core i7-8565U (4 cores), 14 GiB RAM, Intel UHD Graphics 620 (OpenGL 4.6), Ubuntu 25.10.
@@ -86,12 +86,15 @@ Run them from the repository folder. `make help` prints the same list.
 | `make rviz` | Opens RViz with the robot model, its frames, the LiDAR scan and odometry | To see what the robot senses |
 | `make ws` | Builds our ROS 2 package `src/x2_nav` with colcon | After cloning, and after adding a node or changing `setup.py` |
 | `make square` | Runs `square_driver`: drives a 1 m square without feedback and logs the start and end odometry | To test the first node and see odometry drift. Start the simulation with `make sim X=2.0 Y=-2.0` first |
+| `make mapping GUI=0` | Starts the simulation, slam_toolbox and RViz, without the Gazebo window | To build the map (task 2.2), driving with `make auto-map` or `make teleop` |
+| `make auto-map` | Drives the mapping route automatically, with smooth turns and a LiDAR safety stop (about 9–10 min) | Right after a fresh `make mapping`, with the robot at its spawn |
+| `make save-map` | Saves the current map and pose graph to `maps/house.*` (`MAP=name` for another name) | When the map is complete, while `make mapping` is still running |
 | `make shell` | Opens a terminal inside the container, with ROS 2 ready | To run `ros2` commands (topics, nodes) |
 | `make log` | Shows the container's status, its CPU and RAM use, and the simulation processes running | To check what is running, or to measure resource use |
 | `make stop` | Stops any simulation still running in the container | After closing a terminal without `Ctrl+C`. `make sim` runs it first |
 | `make versions` | Prints the exact versions of the host, container, ROS 2 and Gazebo | To fill in or check the [Exact versions](#exact-versions) table |
 | `make down` | Stops and removes the container (the image stays) | When you're done for the day, to free its memory |
-| `make clean` | Removes the container and the image | To free 2.5 GB of disk, or to test a fresh install. The next start needs `make build` |
+| `make clean` | Removes the container and the image | To free 3 GB of disk, or to test a fresh install. The next start needs `make build` |
 
 ## Tasks
 
@@ -173,7 +176,31 @@ Start the simulation first (`make sim` or `make sim GUI=0`), then use one termin
 
 ### 2.2 Mapping
 
-<!-- Q2.1: make mapping, make save-map -->
+Build a 2D map of the house with slam_toolbox while the robot drives a fixed route through the building (`config/map_route.yaml`). The map origin is the spawn point, which plays "reception". The saved map is already in `maps/`, so this section is only needed to rebuild it.
+
+1. Start the simulation, slam_toolbox and RViz. The Gazebo window isn't needed: RViz shows the map as it grows:
+
+   ```bash
+   make mapping GUI=0
+   ```
+
+2. In a second terminal, once RViz shows the first scan, drive the route automatically. It takes about 9–10 minutes: the robot follows 153 waypoints, drives through the rounded corners without stopping, ramps up its turns, pauses 3 s at a few points, and stops if anything comes within 0.2 m ahead:
+
+   ```bash
+   make auto-map
+   ```
+
+3. When the log prints `Route finished`, save the map in the same terminal. This writes `maps/house.pgm` and `maps/house.yaml` (the map) and `maps/house.posegraph` and `maps/house.data` (slam_toolbox's graph):
+
+   ```bash
+   make save-map
+   ```
+
+4. Stop everything with `Ctrl+C` in the first terminal.
+
+Check the map in RViz before saving it. The rooms north and north-east of the hall are sometimes smeared, with walls drawn twice at an angle; this happened in 2 of 3 runs on the same route. If you see it, start again from step 1.
+
+To drive by hand instead, replace step 2 with `make teleop` (`i` forward, `j`/`l` turn, `k` stop; click in that terminal first). Don't touch anything: a collision makes odometry wrong and distorts the map.
 
 ### 2.3 Navigation
 

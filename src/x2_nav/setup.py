@@ -21,6 +21,7 @@ setup(
         'console_scripts': [
             # One line per node, added by the slice that implements it.
             'square_driver = x2_nav.square_driver:main',  # Q1.2
+            'auto_map = x2_nav.auto_map:main',            # Q2.1
         ],
     },
 )

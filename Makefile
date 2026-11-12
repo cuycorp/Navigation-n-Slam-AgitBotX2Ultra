@@ -17,13 +17,16 @@ Y ?= -0.5
 
 # Simulation processes that can outlive a closed terminal. The [x] brackets stop pkill from
 # matching its own command line.
-SIM_PROCS := [r]os2 launch|[g]z sim|[p]arameter_bridge|[r]obot_state_publisher|[r]viz2|[s]quare_driver
+SIM_PROCS := [r]os2 launch|[g]z sim|[p]arameter_bridge|[r]obot_state_publisher|[r]viz2|[s]quare_driver|[a]sync_slam_toolbox_node|[a]uto_map
+
+# Name of the map files in maps/: make save-map MAP=house
+MAP ?= house
 
 # Run a command inside the container, with ROS 2 and our workspace (once built) sourced.
 ROS = $(DC) exec dev bash -c 'source /opt/ros/jazzy/setup.bash; \
       [ -f install/setup.bash ] && source install/setup.bash; $(1)'
 
-.PHONY: help build up down clean log stop shell versions sim teleop rviz ws square
+.PHONY: help build up down clean log stop shell versions sim teleop rviz ws square mapping auto-map save-map
 help:      ## list the targets
 	@grep -E '^[a-z-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
 build:     ## build the Docker image and print its size
@@ -64,3 +67,11 @@ ws:        ## Q1.2: build our ROS 2 package (src/x2_nav) with colcon
 	$(call ROS,colcon build --symlink-install)
 square:    ## Q1.2: run square_driver: a 1 m square, open loop (start with: make sim X=2.0 Y=-2.0)
 	$(call ROS,ros2 run x2_nav square_driver --ros-args -p use_sim_time:=true)
+mapping: stop  ## Q2.1: simulation + slam_toolbox + RViz; drive with make teleop. GUI=0: no Gazebo window
+	$(call ROS,ros2 launch /ws/launch/mapping.launch.py gui:=$(GUI) x_pose:=$(X) y_pose:=$(Y))
+auto-map:  ## Q2.1: drive the mapping route automatically, smooth turns (right after a fresh make mapping)
+	$(call ROS,ros2 run x2_nav auto_map --ros-args -p use_sim_time:=true -p route_file:=/ws/config/map_route.yaml \
+	  -p pass_through:=true -p angular_accel:=1.5)
+save-map:  ## Q2.1: save the current map to maps/$(MAP).pgm/.yaml and the pose graph (make mapping must be running)
+	$(call ROS,ros2 run nav2_map_server map_saver_cli -f /ws/maps/$(MAP) --ros-args -p use_sim_time:=true -p save_map_timeout:=10.0 \
+	  && ros2 service call /slam_toolbox/serialize_map slam_toolbox/srv/SerializePoseGraph "{filename: /ws/maps/$(MAP)}")

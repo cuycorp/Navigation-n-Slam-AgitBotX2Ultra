@@ -15,6 +15,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-rviz2 \
     && rm -rf /var/lib/apt/lists/*
 
+# Q2.1: build the map (slam_toolbox) and save it to disk (map_saver_cli, from nav2_map_server).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ros-jazzy-slam-toolbox \
+      ros-jazzy-nav2-map-server \
+    && rm -rf /var/lib/apt/lists/*
+
 # Run as the host user, so files written into the repo (maps, results, build) aren't owned by root.
 # The base image already has the user "ubuntu" (UID/GID 1000); make passes your real IDs.
 ARG USER_UID=1000
